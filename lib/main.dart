@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.cyan,
       ),
       home: MyHomePage(title: 'Recipe Planner'),
     );
@@ -51,6 +52,84 @@ class Recipe {
   Recipe({this.imageUrl, this.name});
 
   final String imageUrl, name;
+}
+
+class NewRecipePage extends StatelessWidget {
+  NewRecipePage({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("New Recipe"),
+        ),
+        body: NewRecipeForm());
+  }
+}
+
+// Define a Custom Form Widget
+class NewRecipeForm extends StatefulWidget {
+  @override
+  NewRecipeFormState createState() {
+    return NewRecipeFormState();
+  }
+}
+
+// Define a corresponding State class. This class will hold the data related to
+// the form.
+class NewRecipeFormState extends State<NewRecipeForm> {
+  // Create a global key that will uniquely identify the Form widget and allow
+  // us to validate the form
+  //
+  // Note: This is a `GlobalKey<FormState>`, not a GlobalKey<MyCustomFormState>!
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    // Build a Form widget using the _formKey we created above
+    return Padding(
+        padding: EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Name'),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please enter a name for the Recipe';
+                  }
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: RaisedButton(
+                  onPressed: () async {
+                    // Validate will return true if the form is valid, or false if
+                    // the form is invalid.
+                    if (_formKey.currentState.validate()) {
+                      // obtain shared preferences
+                      final prefs = await SharedPreferences.getInstance();
+                      prefs.setInt('recipes', counter);
+
+
+
+
+
+
+                      // If the form is valid, we want to show a Snackbar
+                      Scaffold.of(context).showSnackBar(
+                          SnackBar(content: Text('Processing Data')));
+                    }
+                  },
+                  child: Text('Save Recipe'),
+                ),
+              ),
+            ],
+          ),
+        ));
+  }
 }
 
 class RecipePage extends StatelessWidget {
@@ -91,7 +170,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() {
+  void _addNewRecipe() {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => NewRecipePage()));
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -118,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: GridView.extent(
         maxCrossAxisExtent: 200,
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(20),
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
         // Center is a layout widget. It takes a single child and positions it
@@ -145,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _addNewRecipe,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
